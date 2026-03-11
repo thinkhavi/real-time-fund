@@ -1,0 +1,33 @@
+name: Sync Upstream
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天北京时间 08:00 执行一次
+  workflow_dispatch:   # 允许你在 Actions 界面手动点击按钮立即同步
+
+jobs:
+  combine_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync Upstream
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_repo: xream/real-time-fund  # 原作者仓库
+          upstream_sync_branch: main                # 原作者分支
+          target_sync_branch: main                  # 你的分支
+          test_mode: false
+
+      - name: Check for Failure
+        if: failure()
+        run: |
+          echo "同步失败，可能是因为你修改过代码产生了冲突（Conflict）。"
+          exit 1
